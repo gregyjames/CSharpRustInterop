@@ -1,11 +1,11 @@
-
-[![Build C# and Rust Project](https://github.com/gregyjames/CSharpRustInterop/actions/workflows/makefile.yml/badge.svg?branch=main)](https://github.com/gregyjames/CSharpRustInterop/actions/workflows/makefile.yml)
-
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/gregyjames/CSharpRustInterop/makefile.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build)
+![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
+![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
   
 
 # CSharpRustInterop
 
-Some examples I found useful calling Rust from CSharp
+Some examples I found useful calling Rust from CSharp, I'm sure some of these could be further optimized but this is just a starting ground. The ILogger is particularly useful for maintaining logging settings between Rust and C# code contexts. 
 
   
 
@@ -16,7 +16,10 @@ Some examples I found useful calling Rust from CSharp
  3. Passing a heap allocated class to Rust by using `GCHandle.Alloc(obj, GCHandleType.Pinned)` to acquire a handler to a fixed handler and using `AddrOfPinnedObject()` to retrieve the pointer to that object's memory location.
  4. Writing to a C# ILogger using delegate function stored as global function pointer in Rust
 
-
+# Running
+```sh
+make full_run
+```
 # License
 MIT License
 
