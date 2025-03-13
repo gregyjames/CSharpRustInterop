@@ -1,4 +1,5 @@
 ﻿using System.IO.MemoryMappedFiles;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -45,6 +46,8 @@ class Program
     [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
     private static extern void set_err_logger(LogCallback callback);
     
+    [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr rust_generate_structs(int length);
     static unsafe void Main()
     {
         Log.Logger = new LoggerConfiguration()
@@ -127,6 +130,21 @@ class Program
         {
             logger.LogInformation("[{ctx}]: Freed pinned handle.", "CSharp");
             handle.Free(); // Release the handle after Rust is done
+        }
+
+        const int spanLength = 8;
+        var spanAddr = rust_generate_structs(spanLength);
+        var asSpan = new Span<MyStruct>((void*)spanAddr, spanLength);
+        ref var spanSearchSpace = ref MemoryMarshal.GetReference(asSpan);
+        for (int i = 0; i < spanLength; i++)
+        {
+            var item = Unsafe.Add(ref spanSearchSpace, i);
+            logger.LogInformation("[{ctx}]: Value from Rust -> Id: {id}, Value: {value}", "CSharp", item.id, item.value);
+        }
+        
+        if (spanAddr != IntPtr.Zero)
+        {
+            Marshal.FreeHGlobal(spanAddr);
         }
         
         logger.LogInformation("[{ctx}]: Program ending...", "CSharp");

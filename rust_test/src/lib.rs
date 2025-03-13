@@ -106,3 +106,21 @@ pub extern "C" fn read_class(ptr: *const MyClass) {
     let obj = unsafe { &*ptr };
     log_info_to_csharp(&format!("Rust received: id = {}, value = {} from the C# class.", obj.id, obj.value));
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rust_generate_structs(len: usize) -> *const MyStruct {
+    if len == 0 {
+        return std::ptr::null();
+    }
+
+    // Create a Box<[MyStruct]> and leak it to return a raw pointer
+    let structs: Box<[MyStruct]> = (0..len)
+        .map(|i| MyStruct { 
+            id: i as i32, 
+            value: i as f32 * 1.5 
+        })
+        .collect::<Vec<_>>()
+        .into_boxed_slice();
+
+    Box::into_raw(structs) as *const MyStruct // Return pointer to C#
+}
