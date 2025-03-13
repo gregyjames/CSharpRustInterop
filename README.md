@@ -14,6 +14,7 @@ Some examples I found useful calling Rust from CSharp
  1. Writing to a memory mapped file by getting a `SafeMemoryMappedViewHandle` and passing its pointer to Rust.
  2. Passing a List of structs to Rust by using `CollectionMarshall` to read as a span and pinning the reference to the first element using `MemoryMarshal.GetReference`
  3. Passing a heap allocated class to Rust by using `GCHandle.Alloc(obj, GCHandleType.Pinned)` to acquire a handler to a fixed handler and using `AddrOfPinnedObject()` to retrieve the pointer to that object's memory location.
+ 4. Writing to a C# ILogger using delegate function stored as global function pointer in Rust
 
 
 # License
