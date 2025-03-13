@@ -1,0 +1,77 @@
+name: Build C# and Rust Project
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest]
+        build_mode: [debug, release]
+
+    env:
+      BUILD_MODE: ${{ matrix.build_mode }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust_test/target
+          key: rust-${{ runner.os }}-${{ hashFiles('rust_test/Cargo.lock') }}
+
+      - name: Cache .NET Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.nuget/packages
+            CSharpDemo/obj
+          key: dotnet-${{ runner.os }}-${{ hashFiles('CSharpDemo/*.csproj') }}
+
+      - name: Build Rust Library (${{ matrix.build_mode }})
+        run: |
+          make rust BUILD_MODE=${{ matrix.build_mode }}
+
+      - name: Build C# Project (${{ matrix.build_mode }})
+        run: |
+          make csharp BUILD_MODE=${{ matrix.build_mode }}
+
+      - name: Copy Rust Library to C# Output
+        run: |
+          make copy_rust_lib BUILD_MODE=${{ matrix.build_mode }}
+
+      - name: Set Library Path (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          echo "LD_LIBRARY_PATH=$(pwd)/CSharpDemo/bin/${{ matrix.build_mode }}/net9.0" >> $GITHUB_ENV
+          echo "DYLD_LIBRARY_PATH=$(pwd)/CSharpDemo/bin/${{ matrix.build_mode }}/net9.0" >> $GITHUB_ENV
+
+      - name: Run C# Application (${{ matrix.build_mode }}) (Linux & macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          make run BUILD_MODE=${{ matrix.build_mode }}
